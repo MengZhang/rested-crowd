@@ -3,14 +3,14 @@ Rested Crowd - Simple Crowd SSO Rest Wrapper
 Christopher Villalobos <cvillalobos@ufl.edu>
 v1.0, 05-08-2013
 
-.Abstract
+== Abstract
 This module simplifies the calling of rest applications
 from within Play 2.1.2 applications.
 
-.Setup
-[NOTE] To be completed.
+== Setup
+*To be completed.*
 
-.Installation
+== Installation
 WARNING: This project will publish directly to the default
 Maven2/3 directory (+.m2/repository+). To change this, fix the
 +project/Build.scala+ file.
@@ -20,5 +20,5 @@ Run +play publish+ or +publish+ from the Play console.
 To install for Play applications directly, +play publish-local+ or 
 +publish-local+ from the Play Console.
 
-.Methods
-[NOTE] To be completed.
+== Methods
+*To be completed.*
