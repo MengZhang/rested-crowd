@@ -16,3 +16,4 @@ dist
 /.target
 conf/application.conf
 *~
+*#
