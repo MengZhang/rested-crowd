@@ -1,9 +1,13 @@
 package plugins;
 
+//import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import play.Logger;
 import play.Play;
-import play.libs.WS;
-import play.libs.WS.WSRequestHolder;
-import org.codehaus.jackson.JsonNode;
+import play.libs.ws.*;
+import play.libs.F.Function;
+import play.libs.F.Promise;
 
 /**
  * @author Christopher Villalobos
@@ -83,13 +87,21 @@ public enum RestedCrowdPlugin {
      * @return is the current session valid
      */
     public static boolean validCrowdSession(String token) {
-        int statusCode = RestedCrowdPlugin.crowdRequest("session/"+token)
-            .post(RestedCrowdPlugin.VALIDATION_FACTORS).get().getStatus();
-        if (statusCode == 200) {
-            return true;
-        } else {
-            return false;
-        }
+	Boolean isValid  = RestedCrowdPlugin
+	    .crowdRequest("session/"+token)
+	    .post(RestedCrowdPlugin.VALIDATION_FACTORS)
+	    .map(
+		 new Function<WSResponse, Boolean>() {
+		     public Boolean apply(WSResponse res) throws Throwable {
+			 int statusCode = res.getStatus();
+			 if (statusCode == 200) {
+			     return new Boolean(true);
+			 } else {
+			     return new Boolean(false);
+			 }
+		     }
+		 }).get(30000);
+       return isValid.booleanValue();
     }
 
     /**
@@ -99,9 +111,20 @@ public enum RestedCrowdPlugin {
      * @return current session email address
      */
     public static String getCrowdEmail(String token) {
-        return RestedCrowdPlugin.crowdRequest("session/"+token)
-            .get().get().asJson().findPath("email").asText();
+	return RestedCrowdPlugin.crowdRequest("session/"+token).get().map(
+	    new Function<WSResponse, String>() {
+		public String apply(WSResponse res) throws Throwable {
+		    if(res.getStatus() != 200) {
+			Logger.error("Error with status: "+res.getStatus()+" Body: "+res.getBody());
+			return null;
+		    } else {
+			JsonNode j = res.asJson();
+			return j.findPath("email").asText();
+		    }
+		}
+	    }).get(30000);
     }
+
 
     /**
      * Retrieve the cookie settings from the server.
@@ -110,8 +133,13 @@ public enum RestedCrowdPlugin {
      */
     public static CookieSettings getCookieSettings() {
         if (cookieSettings == null) {
-            JsonNode settings = RestedCrowdPlugin.crowdRequest("config/cookie")
-                .get().get().asJson();
+	    JsonNode settings = RestedCrowdPlugin.crowdRequest("config/cookie")
+                .get().map(
+		    new Function<WSResponse, JsonNode>() {
+			public JsonNode apply(WSResponse res) throws Throwable {
+			    return res.asJson();
+			}
+		    }).get(30000);
             cookieSettings = new RestedCrowdPlugin.CookieSettings(settings.findPath("name").asText(),
                     settings.findPath("domain").asText(), false);
         }
